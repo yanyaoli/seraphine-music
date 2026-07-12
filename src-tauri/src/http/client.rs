@@ -11,7 +11,7 @@ use tauri_plugin_http::reqwest::{
   Client, Method, Response, Url,
 };
 
-use crate::http::{config::HttpConfig, lib::KgCookies, server::BASE_URL};
+use crate::http::{lib::KgCookies, server::BASE_URL};
 
 /// HTTP 客户端实例
 static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
