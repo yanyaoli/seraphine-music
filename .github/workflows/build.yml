@@ -28,16 +28,6 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Cache pnpm store and node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
       - name: Cache Cargo registry and target
         uses: actions/cache@v4
         with:
