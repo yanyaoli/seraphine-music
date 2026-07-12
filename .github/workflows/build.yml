@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --allow-builds='*'
 
       - name: Build frontend
         run: pnpm build
