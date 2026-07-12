@@ -31,7 +31,7 @@ jobs:
           node-version: '24'
 
       - name: Cache pnpm store and node_modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.pnpm-store
@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install dependencies
-        run: pnpm install --allow-builds='*'
+        run: pnpm install
 
       - name: Build frontend
         run: pnpm build
