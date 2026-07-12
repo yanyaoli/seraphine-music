@@ -22,7 +22,7 @@
     ],
     "security": {
       "capabilities": ["desktop-capability", "desktop-lyric-capability"],
-      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://*; connect-src 'self' http://ipc.localhost https://*; style-src 'self' 'unsafe-inline'; font-src 'self' data:;",
+      "csp": "default-src 'self'; img-src 'self' asset: http: https:; connect-src 'self' http: https:;style-src 'self' 'unsafe-inline';",
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]
