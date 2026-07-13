@@ -40,6 +40,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
+          version: 11
           node-version: '24'
 
       - name: Cache Cargo registry and target
