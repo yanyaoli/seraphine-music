@@ -275,6 +275,8 @@ export function disableHotkeys(disabled: boolean = true) {
         e.key === 'F12' ||
         (ctrlMeta && (e.key === 'r' || e.key === 'R')) || // 刷新
         (ctrlMeta && e.shiftKey && (e.key === 'r' || e.key === 'R')) || // 强制刷新
+        (ctrlMeta && e.key === 'g') || // 搜索
+        (ctrlMeta && e.key === 'j') || // 下载
         (ctrlMeta && e.key === 'w') || // 关闭标签
         (ctrlMeta && e.key === 't') || // 新建标签
         (ctrlMeta && e.key === 'p') || // 打印
