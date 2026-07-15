@@ -59,7 +59,8 @@ watchThrottled(
             class="size-full text-minor"
             name="DoubleDown"
             size="42" />
-          <div class="relative size-full" v-else>
+
+          <div v-else class="relative size-full">
             <Image class="size-full" :img="cover" />
 
             <SvgIcon

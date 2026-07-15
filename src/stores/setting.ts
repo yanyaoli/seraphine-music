@@ -37,7 +37,7 @@ export const useSettingStore = defineStore(
     const mediaShortcutState = ref(true) // 媒体快捷键状态
     const shortcutMap = ref({ ...Default_Shortcut }) // 快捷键映射
     const device = ref('') // 设备ID
-    const version = ref('0.1.0') // 应用版本
+    const version = ref('0.1.1') // 应用版本
 
     const musicStore = useMusicStore()
 

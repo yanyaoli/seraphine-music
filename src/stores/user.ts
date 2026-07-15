@@ -24,7 +24,9 @@ export const useUserStore = defineStore(
       const youth_union_vip = await invoke('api_youth_union_vip')
       if (youth_union_vip?.status !== 1) return
 
-      isVip.value = youth_union_vip.data.busi_vip.every((item) => item.is_vip === 1)
+      isVip.value = youth_union_vip.data.busi_vip.some(
+        (item) => item.product_type === 'svip' && item.is_vip === 1
+      )
     }
 
     const login = async (newUserinfo: UserInfo) => {

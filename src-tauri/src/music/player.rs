@@ -224,8 +224,9 @@ impl Player {
             return;
           }
 
+          let stream_file = StreamFile::new(file, file_size, downloaded_size);
+
           if let Ok(mut audio_writer) = audio.write() {
-            let stream_file = StreamFile::new(file, file_size, downloaded_size);
             if let Err(e) = audio_writer.load_from_stream(stream_file, file_size) {
               eprintln!("加载音频流失败: {}", e);
             }
@@ -434,7 +435,7 @@ pub fn music_player_pause(state: State<Player>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn music_player_stop(state: State<Player>) -> Result<(), String> {
+pub async fn music_player_stop(state: State<'_, Player>) -> Result<(), String> {
   let mut audio_writer = state.audio.write().map_err(|e| e.to_string())?;
 
   Ok(audio_writer.stop())

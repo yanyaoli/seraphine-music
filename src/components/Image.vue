@@ -14,7 +14,7 @@ const { img, icon = 'Music', iconSize = 20 } = defineProps<Props>()
 const attrs = useAttrs()
 const isLoaded = ref(false)
 
-const handlePreload = () => {
+const handlePreload = (img: string) => {
   isLoaded.value = false
   if (!img) return
 
@@ -25,7 +25,7 @@ const handlePreload = () => {
   image.onerror = () => (isLoaded.value = false)
 }
 
-onMounted(handlePreload)
+watch(() => img, handlePreload, { immediate: true })
 </script>
 
 <template>
