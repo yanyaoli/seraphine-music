@@ -141,5 +141,5 @@ export function useDesktopLyricBridge(onClose: () => void) {
   /** 立即推送当前状态（窗口创建后的初始推送） */
   const pushNow = () => pushState()
 
-  return { start, stop, pushNow }
+  return { start, stop, pushNow, isLyricOpen }
 }

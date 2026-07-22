@@ -8,9 +8,6 @@ const bridge = useDesktopLyricBridge(destroyWindow)
 
 let lyricsWindow: WebviewWindow | undefined
 
-/** 桌面歌词窗口是否打开 */
-const isLyricOpen = () => WebviewWindow.getByLabel(WindowName.DesktopLyric) !== null
-
 const creatWindow = () => {
   const screenWidth = window.screen.availWidth
   const screenHeight = window.screen.availHeight
@@ -54,9 +51,9 @@ onUnmounted(() => {
 <template>
   <div
     class="action-icon text-center font-bold leading-8"
-    :class="isLyricOpen() ? 'text-info' : ''"
+    :class="bridge.isLyricOpen() ? 'text-info' : ''"
     title="桌面歌词"
-    @click="isLyricOpen() ? destroyWindow() : creatWindow()">
+    @click="bridge.isLyricOpen() ? destroyWindow() : creatWindow()">
     词
   </div>
 </template>
