@@ -5,7 +5,7 @@ import { notify } from '@/components/Notification'
 import SelectModal from '@/components/SelectModal.vue'
 import SlideBar from '@/components/SlideBar.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useContextmenuStore } from '@/stores/contextmenu'
+import { useContextMenuStore } from '@/stores/context-menu'
 import { useListStore } from '@/stores/list'
 import { useMusicStore } from '@/stores/music'
 import { useRefreshStore } from '@/stores/refresh'
@@ -21,7 +21,7 @@ const userStore = useUserStore()
 const listStore = useListStore()
 const musicStore = useMusicStore()
 const refreshStore = useRefreshStore()
-const contextMenuStore = useContextmenuStore()
+const contextMenuStore = useContextMenuStore()
 
 const slideOptions: Array<SelectOption<PlaylistType>> = [
   { label: '自建歌单', value: PlaylistType.User },

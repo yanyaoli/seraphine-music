@@ -150,7 +150,7 @@
 | `user`         | 用户信息、VIP 状态、用户歌单                      | userinfo                                             |
 | `setting`      | 窗口状态、字体、自启、关闭行为、快捷键、设备      | autoLiteVipState, fontFamily, ...                    |
 | `desktopLyric` | 桌面歌词窗口样式设置                              | isLocked, fontSize, fontFamily, textColors, transMode, offsetMap |
-| `contextmenu`  | 右键菜单状态                                      | —                                                    |
+| `contextMenu`  | 右键菜单状态                                      | —                                                    |
 | `refresh`      | 页面刷新触发信号                                  | —                                                    |
 
 ### 6. 多窗口架构

@@ -3,7 +3,7 @@ import ActionButton from '@/components/ActionButton.vue'
 import { notify } from '@/components/Notification'
 import SvgIcon from '@/components/SvgIcon.vue'
 import VirtualList from '@/components/VirtualList.vue'
-import { useContextmenuStore } from '@/stores/contextmenu'
+import { useContextMenuStore } from '@/stores/context-menu'
 import { useListStore } from '@/stores/list'
 import { useMusicStore } from '@/stores/music'
 import { useUserStore } from '@/stores/user'
@@ -16,7 +16,7 @@ provide('listType', ListType.Play)
 const listStore = useListStore()
 const musicStore = useMusicStore()
 const userStore = useUserStore()
-const contextMenuStore = useContextmenuStore()
+const contextMenuStore = useContextMenuStore()
 
 const tableColumns: TableColumn[] = [
   { key: 'index', slot: true, width: '3rem', padding: 0 },

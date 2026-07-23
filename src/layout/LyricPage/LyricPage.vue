@@ -13,7 +13,7 @@ import SquareCover from './SquareCover.vue'
 import VinylRecord from './VinylRecord.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
 import SystemActions from '@/components/SystemActions.vue'
-import { useContextmenuStore } from '@/stores/contextmenu.ts'
+import { useContextMenuStore } from '@/stores/context-menu.ts'
 import { useMainLyricStore } from '@/stores/lyric.ts'
 import { useMusicStore } from '@/stores/music.ts'
 import { useSettingStore } from '@/stores/setting.ts'
@@ -22,7 +22,7 @@ import { LyricPageMode } from '@/utils/params'
 const settingStore = useSettingStore()
 const lyricStore = useMainLyricStore()
 const musicStore = useMusicStore()
-const contextMenuStore = useContextmenuStore()
+const contextMenuStore = useContextMenuStore()
 
 const lyricSearchVisible = ref(false)
 
