@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "capabilities": ["desktop-capability", "desktop-lyric-capability"],
+      "capabilities": ["desktop-capability", "desktop-lyric-capability", "desktop-mini-capability"],
       "csp": "default-src 'self'; img-src 'self' asset: http: https:; connect-src 'self' http: https:;style-src 'self' 'unsafe-inline';",
       "assetProtocol": {
         "enable": true,

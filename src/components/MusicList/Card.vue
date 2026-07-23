@@ -2,7 +2,7 @@
 import Image from '../Image.vue'
 import SvgIcon from '../SvgIcon.vue'
 import { notify } from '@/components/Notification'
-import { useContextMenuStore } from '@/stores/contextMenu'
+import { useContextmenuStore } from '@/stores/contextmenu.ts'
 import { useListStore } from '@/stores/list'
 import { useMusicStore } from '@/stores/music'
 import { useUserStore } from '@/stores/user'
@@ -21,7 +21,7 @@ const emits = defineEmits<Emits>()
 const musicStore = useMusicStore()
 const listStore = useListStore()
 const userStore = useUserStore()
-const contextMenuStore = useContextMenuStore()
+const contextMenuStore = useContextmenuStore()
 
 const handleContextMenu = (e: MouseEvent) => {
   if (!data.musicInfo) return

@@ -2,13 +2,13 @@
 import ActionButton from '@/components/ActionButton.vue'
 import Modal from '@/components/Modal.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { useMusicStore } from '@/stores/music'
 import { getFullName, invoke } from '@/utils/tools'
 
 const visible = defineModel({ required: true, default: false })
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 const musicStore = useMusicStore()
 
 const searchQuery = ref('')
@@ -26,7 +26,7 @@ const handleSearch = async () => {
     hash: musicStore.music.hash
   })
   if (lyric_search?.status !== 200) {
-    searchList.value = []
+    searchList.value.length = 0
     searchLoading.value = false
     return
   }
@@ -39,7 +39,7 @@ const handleReset = (refresh = false) => {
   if (!musicStore.music) return
 
   searchQuery.value = getFullName(musicStore.music, 'at')
-  searchList.value = []
+  searchList.value.length = 0
   selectLyric.value = searchList.value.find((item) => item.id === lyricStore.lyric?.id)
 
   if (refresh) handleSearch()

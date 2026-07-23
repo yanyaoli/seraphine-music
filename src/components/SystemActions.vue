@@ -1,49 +1,95 @@
 <script lang="ts" setup>
 import Modal from './Modal.vue'
+import { notify } from './Notification.tsx'
 import SvgIcon from './SvgIcon.vue'
+import { useDesktopMiniBridge } from '@/composables/useDesktopMiniBridge.ts'
 import { useSettingStore } from '@/stores/setting'
-import { CloseStatus } from '@/utils/params'
+import { CloseStatus, WindowName, desktopMiniSize } from '@/utils/params'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useColorMode } from '@vueuse/core'
+
+const mainWindow = getCurrentWindow()
 
 const colorMode = useColorMode()
 const settingStore = useSettingStore()
 
-const currentWindow = getCurrentWindow()
-
+const miniWindow = ref<WebviewWindow>()
 const closeVisible = ref(false)
 const closeStatus = ref(settingStore.closeStatus ?? CloseStatus.Hide)
 
+const miniBridge = useDesktopMiniBridge(miniWindow, mainWindow)
+
+const handleColor = () => {
+  colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
+}
+
+const handleDesktopMini = async () => {
+  if (!miniWindow.value) {
+    const scaleFactor = await mainWindow.scaleFactor()
+
+    const { width, height } = desktopMiniSize
+    const { x, y } = settingStore.desktopMiniPosition
+    const logicalX = x / scaleFactor || Math.round(window.screen.availWidth - width - 16)
+    const logicalY = y / scaleFactor || 48
+
+    miniWindow.value = new WebviewWindow(WindowName.DesktopMini, {
+      title: '迷你播放器',
+      url: '/desktop-mini.html',
+      width,
+      height,
+      x: logicalX,
+      y: logicalY,
+      transparent: true,
+      decorations: false,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false
+    })
+
+    miniWindow.value.once('tauri://created', () => {
+      miniBridge.start()
+      mainWindow.hide()
+    })
+    miniWindow.value.once('tauri://error', () => {
+      notify.error('迷你播放器创建失败')
+      miniWindow.value = undefined
+    })
+  } else {
+    miniBridge.stop()
+  }
+}
+
 // 最小化
 const handleMinimize = () => {
-  currentWindow.minimize()
+  mainWindow.minimize()
 }
 
 // 最大化
 const handleMaximize = async () => {
-  await currentWindow.toggleMaximize()
+  await mainWindow.toggleMaximize()
 
-  const isMaximized = await currentWindow.isMaximized()
+  const isMaximized = await mainWindow.isMaximized()
   settingStore.toggleMaximizedState(isMaximized)
-}
-
-// 关闭
-const handleClose = () => {
-  if (settingStore.closeStatus === undefined) {
-    closeVisible.value = true
-  } else {
-    handleCloseStatus(settingStore.closeStatus)
-  }
 }
 
 const handleCloseStatus = (closeStatus: CloseStatus) => {
   switch (closeStatus) {
     case CloseStatus.Hide:
-      currentWindow.hide()
+      mainWindow.hide()
       break
     case CloseStatus.Exit:
-      currentWindow.close()
+      mainWindow.close()
       break
+  }
+}
+
+const handleClose = () => {
+  if (settingStore.closeStatus === undefined) {
+    closeVisible.value = true
+  } else {
+    handleCloseStatus(settingStore.closeStatus)
   }
 }
 
@@ -64,9 +110,9 @@ const handleConfirm = () => {
     :name="colorMode === 'dark' ? 'Moon' : 'Sun'"
     title="主题"
     size="18"
-    @click="colorMode = colorMode === 'dark' ? 'light' : 'dark'" />
+    @click="handleColor" />
 
-  <SvgIcon class="action-icon" name="PIP" size="18" :disabled="true" />
+  <SvgIcon class="action-icon" name="PIP" size="18" title="迷你播放器" @click="handleDesktopMini" />
 
   <SvgIcon class="action-icon" name="Minimize" @click="handleMinimize" />
 

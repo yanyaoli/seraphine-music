@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { LyricFontSize } from '@/utils/params'
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 </script>
 
 <template>

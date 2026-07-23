@@ -4,7 +4,7 @@ interface ShowOptions {
   options: ContextMenuOption[]
 }
 
-export const useContextMenuStore = defineStore('contextMenu', () => {
+export const useContextmenuStore = defineStore('contextmenu', () => {
   const visible = ref(false)
   const position = ref({ x: 0, y: 0 })
   const options = ref<ContextMenuOption[]>([])

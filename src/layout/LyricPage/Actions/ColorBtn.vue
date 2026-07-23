@@ -1,20 +1,10 @@
 <script lang="ts" setup>
-import { useLyricStore } from '@/stores/lyric'
-import { Interval, LyricTextColor } from '@/utils/params'
+import { useMainLyricStore } from '@/stores/lyric'
+import { Interval, PresetsColors } from '@/utils/params'
 import { vOnClickOutside } from '@vueuse/components'
 import { watchThrottled } from '@vueuse/core'
 
-const lyricStore = useLyricStore()
-
-const presetsColors = [
-  LyricTextColor.Red,
-  LyricTextColor.Orange,
-  LyricTextColor.Yellow,
-  LyricTextColor.Green,
-  LyricTextColor.Cyan,
-  LyricTextColor.Blue,
-  LyricTextColor.Purple
-]
+const lyricStore = useMainLyricStore()
 
 const pickerVisible = ref(false)
 const usedColor = ref(lyricStore.setting.textColor) // 使用的颜色
@@ -25,8 +15,8 @@ watchThrottled(
   (color) => {
     // 校验颜色格式
     if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color)) {
-      lastColor.value = color
       lyricStore.setTextColor(color)
+      lastColor.value = color
     }
   },
   { throttle: Interval.Long }
@@ -47,11 +37,11 @@ watchThrottled(
 
         <div class="flex items-center gap-2 pt-3">
           <div
-            v-for="(color, index) in presetsColors"
+            v-for="(color, index) in PresetsColors"
             class="rounded-full size-4 cursor-pointer hover:scale-110 transition-transform"
             :key="index"
-            :style="{ background: color }"
-            @click="usedColor = color"></div>
+            :style="{ background: color[0] }"
+            @click="usedColor = color[0]"></div>
         </div>
 
         <div class="flex items-center gap-2 pt-3">

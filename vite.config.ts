@@ -5,7 +5,6 @@ import { FileSystemIconLoader } from 'unplugin-icons/loaders'
 import Icons from 'unplugin-icons/vite'
 import { defineConfig } from 'vite'
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
@@ -25,7 +24,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './index.html',
-        desktopLyric: './desktop-lyric.html'
+        desktopLyric: './desktop-lyric.html',
+        desktopMini: './desktop-mini.html'
       }
     }
   },

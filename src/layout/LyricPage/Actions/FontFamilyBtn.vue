@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import SelectModal from '@/components/SelectModal.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { useSettingStore } from '@/stores/setting'
 import { vOnClickOutside } from '@vueuse/components'
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 const settingStore = useSettingStore()
 
 const fontFamilyVisible = ref(false)
@@ -16,14 +16,14 @@ const fontFamilySelection = computed(
     fontFamilyOptions.value[0]
 )
 
-const handleClick = () => {
+const handleFontFamilyClick = () => {
   fontFamilyVisible.value = !fontFamilyVisible.value
 
   if (settingStore.availableFonts.length === 0) settingStore.getAvailableFonts()
   fontFamilyOptions.value = settingStore.availableFonts.map(([label, value]) => ({ label, value }))
 }
 
-const handleSelect = (font: FontValue) => {
+const handleFontFamilySelect = (font: FontValue) => {
   lyricStore.setFontFamily(font)
   fontFamilyVisible.value = false
 }
@@ -34,7 +34,7 @@ const handleSelect = (font: FontValue) => {
     <div
       class="action-icon text-base card flex justify-center items-center"
       title="歌词字体"
-      @click="handleClick">
+      @click="handleFontFamilyClick">
       A
     </div>
 
@@ -43,7 +43,7 @@ const handleSelect = (font: FontValue) => {
       :visible="fontFamilyVisible"
       :options="fontFamilyOptions"
       :selection="fontFamilySelection"
-      @select="handleSelect">
+      @select="handleFontFamilySelect">
     </SelectModal>
   </div>
 </template>

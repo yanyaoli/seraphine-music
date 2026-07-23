@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { IconName } from '@/utils/icons'
 import { LyricTextAlign } from '@/utils/params'
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 
 const Align_Titles = {
   [LyricTextAlign.Left]: '左对齐',

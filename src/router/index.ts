@@ -54,6 +54,11 @@ const router = createRouter({
       path: '/desktop-lyric',
       name: 'DesktopLyric',
       component: () => import('@/views/DesktopLyric.vue')
+    },
+    {
+      path: '/desktop-mini',
+      name: 'DesktopMini',
+      component: () => import('@/views/DesktopMini.vue')
     }
   ]
 })

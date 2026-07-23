@@ -5,8 +5,9 @@
   "windows": ["desktop-lyric"],
   "platforms": ["linux", "macOS", "windows"],
   "permissions": [
-    "core:window:deny-internal-toggle-maximize",
+    "core:window:default",
     "core:window:allow-start-dragging",
+    "core:window:allow-set-ignore-cursor-events",
     "core:event:default"
   ]
 }

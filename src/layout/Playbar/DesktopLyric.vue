@@ -1,59 +1,67 @@
 <script lang="ts" setup>
 import { notify } from '@/components/Notification'
 import { useDesktopLyricBridge } from '@/composables/useDesktopLyricBridge'
-import { WindowName } from '@/utils/params'
+import { useMusicStore } from '@/stores/music'
+import { useSettingStore } from '@/stores/setting'
+import { WindowName, desktopLyricSize } from '@/utils/params'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
-const bridge = useDesktopLyricBridge(destroyWindow)
+const mainWindow = getCurrentWindow()
 
-let lyricsWindow: WebviewWindow | undefined
+const musicStore = useMusicStore()
+const settingStore = useSettingStore()
 
-const creatWindow = () => {
-  const screenWidth = window.screen.availWidth
-  const screenHeight = window.screen.availHeight
-  const width = 640
-  const height = 160
+const lyricWindow = ref<WebviewWindow>()
 
-  lyricsWindow = new WebviewWindow(WindowName.DesktopLyric, {
-    title: '桌面歌词',
-    url: '/desktop-lyric.html',
-    width,
-    height,
-    x: Math.round((screenWidth - width) / 2),
-    y: Math.round(screenHeight - height),
-    transparent: true,
-    decorations: false,
-    alwaysOnTop: true,
-    shadow: false,
-    contentProtected: true,
-    skipTaskbar: true
-  })
+const lyricBridge = useDesktopLyricBridge(lyricWindow)
 
-  lyricsWindow.once('tauri://created', () => bridge.pushNow())
-  lyricsWindow.once('tauri://error', () => notify.error('桌面歌词创建失败'))
+const handleDesktopLyric = async () => {
+  if (!lyricWindow.value) {
+    const scaleFactor = await mainWindow.scaleFactor()
+
+    const { width, height } = desktopLyricSize
+    const { x, y } = settingStore.desktopLyricPosition
+    const logicalX = x / scaleFactor || Math.round((window.screen.availWidth - width) / 2)
+    const logicalY = y / scaleFactor || Math.round(window.screen.availHeight - height)
+
+    lyricWindow.value = new WebviewWindow(WindowName.DesktopLyric, {
+      title: '桌面歌词',
+      url: '/desktop-lyric.html',
+      width,
+      height,
+      x: logicalX,
+      y: logicalY,
+      transparent: true,
+      decorations: false,
+      alwaysOnTop: true,
+      shadow: false,
+      skipTaskbar: true,
+      resizable: false
+    })
+
+    lyricWindow.value.setIgnoreCursorEvents(true)
+
+    lyricWindow.value.once('tauri://created', () => {
+      lyricBridge.start()
+    })
+    lyricWindow.value.once('tauri://error', () => {
+      notify.error('桌面歌词创建失败')
+      lyricWindow.value = undefined
+    })
+  } else {
+    lyricBridge.stop()
+  }
 }
-
-function destroyWindow() {
-  if (!lyricsWindow) return
-  lyricsWindow.close()
-  lyricsWindow = undefined
-}
-
-onMounted(() => {
-  bridge.start()
-})
-
-onUnmounted(() => {
-  bridge.stop()
-})
 </script>
 
 <template>
   <div
     class="action-icon text-center font-bold leading-8"
-    :class="bridge.isLyricOpen() ? 'text-info' : ''"
+    :class="lyricWindow ? 'text-info' : ''"
     title="桌面歌词"
-    @click="bridge.isLyricOpen() ? destroyWindow() : creatWindow()">
+    :data-disabled="!musicStore.music"
+    @click="handleDesktopLyric">
     词
   </div>
 </template>

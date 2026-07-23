@@ -182,8 +182,8 @@ const handleSlideChange = (option: SlideOption) => {
   slideSelection.value = option
 
   listStore.resetList(ListType.Show)
-  artistList.value = []
-  playlistList.value = []
+  artistList.value.length = 0
+  playlistList.value.length = 0
   page.value = 1
 
   handleLoad(route.query.query as string, option.value)

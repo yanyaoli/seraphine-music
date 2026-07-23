@@ -5,7 +5,7 @@ import UserPlaylist from './UserPlaylist.vue'
 </script>
 
 <template>
-  <aside class="card flex flex-col z-10 rounded-none">
+  <aside class="card flex flex-col z-10 border-0 rounded-none">
     <div data-tauri-drag-region class="px-8 py-6">
       <div
         class="pointer-events-none bg-gradient-to-r from-info to-success bg-clip-text font-mono text-2xl font-bold text-transparent">

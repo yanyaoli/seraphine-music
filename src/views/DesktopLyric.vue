@@ -1,88 +1,435 @@
 <script lang="ts" setup>
+import SelectModal from '@/components/SelectModal.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useDesktopLyricStore } from '@/stores/desktopLyric'
-import { LyricEmitType } from '@/utils/params'
+import { useDesktopLyricStore } from '@/stores/desktop-lyric'
+import {
+  DesktopLyricEmit,
+  Interval,
+  LyricFontSize,
+  LyricFormat,
+  LyricTransMode,
+  PresetsColors,
+  WindowEvent,
+  WindowName,
+  desktopLyricSize
+} from '@/utils/params'
+import { getFullName } from '@/utils/tools'
 import { emitTo, listen } from '@tauri-apps/api/event'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { PhysicalPosition, getCurrentWindow } from '@tauri-apps/api/window'
+import { vOnClickOutside } from '@vueuse/components'
+import { useThrottleFn } from '@vueuse/core'
+
+const lyricWindow = getCurrentWindow()
 
 const desktopLyricStore = useDesktopLyricStore()
 
+const FORWARD_DURATION = 150 // 歌词提前滚动时间 (ms)
+const ContentHeight = desktopLyricSize.height - 32 // 歌词部分的高度, 32 = 操作栏高度(2rem)
+
 const isHovering = ref(false)
-const isPlaying = ref(false)
-const lyric = ref<LyricLine[]>([])
+const audio = ref<DesktopLyricAudio>({
+  isLoading: false,
+  isPlaying: false,
+  music: null
+})
+const progress = ref(0)
+const lyric = ref<LyricInfo>()
+const currentIndex = ref(-1)
+const nextIndex = ref(0)
+const colorVisible = ref(false)
+const fontFamilyVisible = ref(false)
+const fontFamilyOptions = ref<Array<SelectOption<FontValue>>>([])
+const isLocked = ref(false)
 
-const currentWindow = getCurrentWindow()
+const fontFamilySelection = computed(
+  () =>
+    fontFamilyOptions.value.find((item) => item.value === desktopLyricStore.fontFamily) ||
+    fontFamilyOptions.value[0]
+)
+// 当前歌词的偏移量
+const offset = computed(() => (lyric.value ? desktopLyricStore.offsetMap[lyric.value.id] || 0 : 0))
 
-const handleClick = (type: LyricEmitType) => {
-  emitTo('main', 'desktop-lyric:handler', { type })
+// 当前高亮歌词行索引
+const activedIndex = computed(() => {
+  if (!lyric.value) return -1
+
+  const lines = lyric.value.lines
+  const pg = (progress.value + offset.value) * 1000 + FORWARD_DURATION
+  for (let i = 0; i < lines.length; i++) {
+    if (pg < lines[i].offset || pg > (lines[i + 1]?.offset || Infinity)) continue
+
+    return i
+  }
+
+  return -1
+})
+
+watch(activedIndex, (index) => {
+  // 情况1：当前播放的 = 上行展示索引
+  if (index === currentIndex.value) {
+    nextIndex.value = index + 1
+  }
+  // 情况2：当前播放的 = 下行展示索引
+  else if (index === nextIndex.value) {
+    currentIndex.value = index + 1
+  }
+  // 情况3：拖动进度条，跳跃很远，直接重置
+  else {
+    currentIndex.value = index
+    nextIndex.value = index + 1
+  }
+})
+
+const lyricLine = computed(() => {
+  if (!lyric.value) return { current: null, next: null }
+
+  return {
+    current: lyric.value.lines[currentIndex.value],
+    next: lyric.value.lines[nextIndex.value]
+  }
+})
+
+const handleFontFamilySelect = (font: FontValue) => {
+  desktopLyricStore.setFontFamily(font)
+  fontFamilyVisible.value = false
 }
 
-onMounted(() => {
-  // 监测移动
-  currentWindow.onMoved(() => (isHovering.value = true))
+const handleTransClick = (mode: LyricTransMode) => {
+  desktopLyricStore.setTransMode(desktopLyricStore.transMode === mode ? LyricTransMode.Off : mode)
+}
 
-  // 获取歌词
-  emitTo('main', 'desktop-lyric:handler', { type: LyricEmitType.GetLyric })
-  listen<{ type: LyricEmitType; data: LyricLine[] }>('desktop-lyric:handler', (e) => {
-    if (e.payload.type === LyricEmitType.SendLyric) lyric.value = e.payload.data
+// 获取单词进度百分比
+const getWordProgress = (word: LyricWord) => {
+  const pg = (progress.value + offset.value) * 1000 - word.offset
+  return `${Math.max(0, Math.min(1, pg / word.duration)) * 100}%`
+}
+
+const handleSend = (type: DesktopLyricEmit, data?: any) => {
+  emitTo(WindowName.Main, WindowEvent.DesktopLyric, { type, data })
+}
+
+const handleLock = () => {
+  // desktopLyricStore.toggleLockState()
+  isLocked.value = !isLocked.value
+  lyricWindow.setIgnoreCursorEvents(isLocked.value)
+
+  if (isLocked.value) isHovering.value = false
+}
+
+const throttledSendPos = useThrottleFn((e: { payload: PhysicalPosition }) => {
+  handleSend(DesktopLyricEmit.Pos, e.payload)
+}, Interval.Long)
+
+onMounted(() => {
+  // 拖动时鼠标会取消悬停状态, 强制赋值
+  lyricWindow.onMoved((e) => {
+    isHovering.value = true
+    throttledSendPos(e)
+  })
+
+  emitTo(WindowName.Main, WindowEvent.DesktopLyric, { type: DesktopLyricEmit.Init })
+  listen<{ type: DesktopLyricEmit; data: unknown }>(WindowEvent.DesktopLyric, (e) => {
+    switch (e.payload.type) {
+      case DesktopLyricEmit.Audio:
+        audio.value = e.payload.data as DesktopLyricAudio
+
+        break
+      case DesktopLyricEmit.Progress:
+        progress.value = e.payload.data as number
+        break
+      case DesktopLyricEmit.Lyric:
+        lyric.value = e.payload.data as LyricInfo
+        break
+      case DesktopLyricEmit.Fonts:
+        fontFamilyOptions.value = (e.payload.data as FontItem[]).map(([label, value]) => ({
+          label,
+          value
+        }))
+        break
+    }
   })
 })
 </script>
 
 <template>
   <div
-    class="h-screen select-none w-screen flex text-background transition-colors flex-col rounded-lg overflow-hidden"
-    :class="isHovering ? 'bg-black/50' : 'bg-transparent'"
+    class="h-screen select-none px-2 text-neutral-200 w-screen transition-colors rounded-lg overflow-hidden"
+    :class="isHovering ? 'bg-black/80' : 'bg-transparent'"
+    :style="{
+      '--height': `${ContentHeight}px`,
+      '--line-height': `${ContentHeight / 2}px`
+    }"
+    @mouseenter="isHovering = true"
     @mouseleave="isHovering = false">
+    <!-- 工具栏 -->
     <div
       data-tauri-drag-region
-      class="w-full flex p-1 transition-opacity cursor-move justify-center items-center"
+      class="w-full flex justify-center items-center transition-opacity cursor-move"
       :class="isHovering ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-      <SvgIcon class="action-icon" name="MusicBold" @click="handleClick(LyricEmitType.Main)" />
-
-      <div class="mx-1 h-4 w-px bg-minor" />
-
-      <SvgIcon class="action-icon" name="PreviousBold" @click="handleClick(LyricEmitType.Prev)" />
       <SvgIcon
         class="action-icon"
-        :name="isPlaying ? 'PauseBold' : 'PlayBold'"
-        @click="handleClick(isPlaying ? LyricEmitType.Pause : LyricEmitType.Play)" />
-      <SvgIcon class="action-icon" name="NextBold" @click="handleClick(LyricEmitType.Next)" />
+        name="MusicBold"
+        title="打开主界面"
+        @click="handleSend(DesktopLyricEmit.Main)" />
 
       <div class="mx-1 h-4 w-px bg-minor" />
 
-      <SvgIcon class="action-icon" name="ForwardLeftBold" />
-      <SvgIcon class="action-icon" name="ForwardRightBold" />
-      <SvgIcon class="action-icon" name="ZoomInBold" />
-      <SvgIcon class="action-icon" name="ZoomOutBold" />
-      <div class="action-icon flex justify-center items-center">字</div>
-      <div class="action-icon flex justify-center items-center">颜</div>
+      <SvgIcon
+        class="action-icon"
+        name="PreviousBold"
+        title="上一首"
+        @click="handleSend(DesktopLyricEmit.Prev)" />
+      <SvgIcon
+        v-if="!audio.isLoading"
+        class="action-icon"
+        :name="audio.isPlaying ? 'PauseBold' : 'PlayBold'"
+        :title="audio.isPlaying ? '暂停' : '播放'"
+        @click="handleSend(audio.isPlaying ? DesktopLyricEmit.Pause : DesktopLyricEmit.Play)" />
+      <SvgIcon
+        v-else
+        class="action-icon pointer-events-none"
+        name="Ring"
+        size="28"
+        title="加载中" />
+      <SvgIcon
+        class="action-icon"
+        name="NextBold"
+        title="下一首"
+        @click="handleSend(DesktopLyricEmit.Next)" />
 
       <div class="mx-1 h-4 w-px bg-minor" />
 
-      <SvgIcon class="action-icon" name="LockBold" />
+      <SvgIcon
+        class="action-icon"
+        name="ForwardLeftBold"
+        title="歌词进度 -0.2 秒"
+        @click="lyric && desktopLyricStore.setOffsetMap('sub', lyric.id)" />
+      <SvgIcon
+        class="action-icon"
+        name="Restart"
+        title="重置歌词进度"
+        @click="lyric && desktopLyricStore.setOffsetMap('restart', lyric.id)" />
+      <SvgIcon
+        class="action-icon"
+        name="ForwardRightBold"
+        title="歌词进度 +0.2 秒"
+        @click="lyric && desktopLyricStore.setOffsetMap('add', lyric.id)" />
+
+      <SvgIcon
+        class="action-icon"
+        name="ZoomInBold"
+        title="增大歌词字体"
+        :disabled="desktopLyricStore.fontSize >= LyricFontSize.Max"
+        @click="desktopLyricStore.setFontSize('add')" />
+      <SvgIcon
+        class="action-icon"
+        name="Restart"
+        title="重置歌词字体大小"
+        @click="desktopLyricStore.setFontSize('restart')" />
+      <SvgIcon
+        class="action-icon"
+        name="ZoomOutBold"
+        title="减小歌词字体"
+        :disabled="desktopLyricStore.fontSize <= LyricFontSize.Min"
+        @click="desktopLyricStore.setFontSize('sub')" />
+
+      <div class="relative" v-on-click-outside="() => (colorVisible = false)">
+        <div
+          class="action-icon flex justify-center items-center"
+          @click="colorVisible = !colorVisible">
+          颜
+        </div>
+
+        <Transition name="zoom-top-right">
+          <div
+            v-if="colorVisible"
+            class="p-2 bg-neutral-600 flex gap-2 rounded-lg absolute right-0 top-full cursor-default">
+            <div
+              v-for="(color, index) in PresetsColors"
+              class="rounded-full size-4 cursor-pointer hover:scale-110 transition-transform"
+              :key="index"
+              :style="{ background: color[0] }"
+              @click="desktopLyricStore.setTextColors(color)"></div>
+          </div>
+        </Transition>
+      </div>
+
+      <div class="relative" v-on-click-outside="() => (fontFamilyVisible = false)">
+        <div
+          class="action-icon flex justify-center items-center"
+          @click="fontFamilyVisible = !fontFamilyVisible">
+          字
+        </div>
+
+        <SelectModal
+          class="absolute right-0 bg-neutral-600 top-full h-[var(--height)]"
+          transition="zoom-top-right"
+          :visible="fontFamilyVisible"
+          :options="fontFamilyOptions"
+          :selection="fontFamilySelection"
+          @select="handleFontFamilySelect" />
+      </div>
+
+      <div class="mx-1 h-4 w-px bg-minor" />
+
+      <div
+        class="action-icon flex justify-center items-center"
+        :class="desktopLyricStore.transMode === LyricTransMode.Trans ? 'text-info' : ''"
+        @click="handleTransClick(LyricTransMode.Trans)">
+        译
+      </div>
+      <div
+        class="action-icon flex justify-center items-center"
+        :class="desktopLyricStore.transMode === LyricTransMode.Roman ? 'text-info' : ''"
+        @click="handleTransClick(LyricTransMode.Roman)">
+        音
+      </div>
+
+      <SvgIcon class="action-icon" name="LockBold" @click="handleLock" />
+
       <SvgIcon
         class="action-icon hover:text-error"
         name="Close"
         size="12"
-        @click="handleClick(LyricEmitType.Close)" />
+        @click="handleSend(DesktopLyricEmit.Close)" />
     </div>
 
+    <!-- 歌词区域 -->
     <div
-      class="flex-1 px-4 overflow-auto"
+      class="font-bold whitespace-nowrap"
       :style="{
         fontFamily: desktopLyricStore.fontFamily,
-        fontSize: `${desktopLyricStore.fontSize}px`
+        fontSize: `${desktopLyricStore.fontSize}px`,
+        '-webkit-text-stroke': '0.4px #000',
+        '--color-lyric-base': desktopLyricStore.textColors[0],
+        '--color-lyric-accent': desktopLyricStore.textColors[1]
       }">
-      <div
-        class="overflow-hidden whitespace-nowrap"
-        v-for="(line, lineIndex) in lyric"
-        :key="lineIndex"
-        @mouseenter="isHovering = true">
-        <span v-for="(word, wordIndex) in line.words" :key="wordIndex">
-          {{ word.text }}
-        </span>
-      </div>
+      <template v-if="!lyric?.lines.length">
+        <div
+          class="text-center h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+          {{ audio.music ? getFullName(audio.music) : 'Seraphine' }}
+        </div>
+      </template>
+
+      <template v-else-if="desktopLyricStore.transMode === LyricTransMode.Off">
+        <template v-if="lyric?.fmt === LyricFormat.Krc">
+          <div class="text-left h-[var(--line-height)] leading-[var(--line-height)]">
+            <span
+              v-for="(word, wordIndex) in lyricLine.current?.words"
+              :key="wordIndex"
+              class="music-lyric"
+              :style="{ '--word-progress': getWordProgress(word) }">
+              {{ word.text }}
+            </span>
+          </div>
+
+          <div class="text-right h-[var(--line-height)] leading-[var(--line-height)]">
+            <span
+              v-for="(word, wordIndex) in lyricLine.next?.words"
+              :key="wordIndex"
+              class="music-lyric"
+              :style="{ '--word-progress': getWordProgress(word) }">
+              {{ word.text }}
+            </span>
+          </div>
+        </template>
+
+        <template v-else-if="lyric?.fmt === LyricFormat.Lrc">
+          <div
+            class="text-left h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+            <span v-for="(word, wordIndex) in lyricLine.current?.words" :key="wordIndex">
+              {{ word.text }}
+            </span>
+          </div>
+
+          <div class="text-right h-[var(--line-height)] leading-[var(--line-height)]">
+            <span v-for="(word, wordIndex) in lyricLine.next?.words" :key="wordIndex">
+              {{ word.text }}
+            </span>
+          </div>
+        </template>
+      </template>
+
+      <template v-else>
+        <template v-if="lyric?.fmt === LyricFormat.Krc">
+          <template v-if="activedIndex === currentIndex">
+            <div class="text-center h-[var(--line-height)] leading-[var(--line-height)]">
+              <span
+                v-for="(word, wordIndex) in lyricLine.current?.words"
+                :key="wordIndex"
+                class="music-lyric"
+                :style="{ '--word-progress': getWordProgress(word) }">
+                {{ word.text }}
+              </span>
+            </div>
+
+            <div
+              class="text-center h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+              {{ lyricLine.current?.translations[desktopLyricStore.transMode] }}
+            </div>
+          </template>
+
+          <template v-else-if="activedIndex === nextIndex">
+            <div class="text-center h-[var(--line-height)] leading-[var(--line-height)]">
+              <span
+                v-for="(word, wordIndex) in lyricLine.next?.words"
+                :key="wordIndex"
+                class="music-lyric"
+                :style="{ '--word-progress': getWordProgress(word) }">
+                {{ word.text }}
+              </span>
+            </div>
+
+            <div
+              class="text-center h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+              {{ lyricLine.next?.translations[desktopLyricStore.transMode] }}
+            </div>
+          </template>
+        </template>
+
+        <template v-else-if="lyric?.fmt === LyricFormat.Lrc">
+          <template v-if="activedIndex === currentIndex">
+            <div
+              class="text-left h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+              <span v-for="(word, wordIndex) in lyricLine.current?.words" :key="wordIndex">
+                {{ word.text }}
+              </span>
+            </div>
+
+            <div
+              class="text-center h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+              {{ lyricLine.current?.translations[desktopLyricStore.transMode] }}
+            </div>
+          </template>
+
+          <template v-else-if="activedIndex === nextIndex">
+            <div class="text-right h-[var(--line-height)] leading-[var(--line-height)]">
+              <span v-for="(word, wordIndex) in lyricLine.next?.words" :key="wordIndex">
+                {{ word.text }}
+              </span>
+            </div>
+
+            <div
+              class="text-center h-[var(--line-height)] leading-[var(--line-height)] text-[var(--color-lyric-base)]">
+              {{ lyricLine.next?.translations[desktopLyricStore.transMode] }}
+            </div>
+          </template>
+        </template>
+      </template>
     </div>
   </div>
 </template>
+
+<style scoped>
+.music-lyric {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-lyric-accent) 0%,
+    var(--color-lyric-accent) var(--word-progress),
+    var(--color-lyric-base) var(--word-progress),
+    var(--color-lyric-base) 100%
+  );
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+</style>

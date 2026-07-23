@@ -1,5 +1,6 @@
 <script lang="ts" setup generic="T extends Record<string, any>">
 import SvgIcon from './SvgIcon.vue'
+import { Interval } from '@/utils/params.ts'
 import { useEventListener, useThrottleFn } from '@vueuse/core'
 
 type Key = keyof T
@@ -82,7 +83,7 @@ const setContainerHeight = () => {
   containerHeight.value = containerRef.value?.clientHeight || 0
 }
 
-const handleInfinite = useThrottleFn((e: Event) => emits('infinite', e), 100)
+const handleInfinite = useThrottleFn((e: Event) => emits('infinite', e), Interval.Long)
 
 // 滚动事件
 const handleScroll = (e: Event) => {

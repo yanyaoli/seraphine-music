@@ -1,9 +1,9 @@
 import { IconName } from '@/utils/icons'
 import {
   DefaultSystemFonts,
+  LyricBaseColor,
   LyricFormat,
   LyricTextAlign,
-  LyricTextColor,
   LyricTransMode,
   PlayingQuality,
   SearchType,
@@ -16,6 +16,7 @@ declare global {
   type ID = string | number
   type FontName = (typeof DefaultSystemFonts)[number][0]
   type FontValue = (typeof DefaultSystemFonts)[number][1]
+  type FontItem = [FontName, FontValue]
 
   /** 后端接口第一层返回结果 */
   interface ApiResponse<T = any> {
@@ -271,10 +272,37 @@ declare global {
   interface LyricSetting {
     fontFamily: FontValue
     fontSize: number
-    textColor: LyricTextColor | string
+    textColor: LyricBaseColor | string
     textAlign: LyricTextAlign
     transMode: LyricTransMode
   }
+
+  /** 迷你播放器音频状态载荷 */
+  interface DesktopMiniAudio {
+    isPlaying: boolean
+    isLoading: boolean
+    music: PlayingMusic | null
+    origin: PlayingOrigin
+  }
+
+  /** 迷你播放器歌词载荷 */
+  interface DesktopMiniLyric {
+    text: string
+  }
+
+  /** 迷你播放器播放列表载荷 */
+  interface DesktopMiniPlaylist {
+    list: ListMusic[]
+  }
+
+  /** 桌面歌词音频状态载荷 */
+  interface DesktopLyricAudio {
+    isPlaying: boolean
+    isLoading: boolean
+    music: PlayingMusic | null
+  }
+
+  type TextColors = readonly [LyricBaseColor, LyricAccentColor]
 
   /** invoke函数的 key 和 params */
   interface Invoke {

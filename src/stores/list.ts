@@ -81,7 +81,7 @@ export const useListStore = defineStore(
       const target = LIST_MAP[type]
       if (!target) return
 
-      target.value.list = []
+      target.value.list.length = 0
       target.value.info.count = 0
 
       clearChecked()
@@ -123,7 +123,7 @@ export const useListStore = defineStore(
     }
 
     const clearLikeList = () => {
-      like.value.list = []
+      like.value.list.length = 0
       like.value.info.count = 0
     }
 
@@ -151,13 +151,13 @@ export const useListStore = defineStore(
 
     // 清空框选列表
     const clearChecked = () => {
-      checkedList.value = []
+      checkedList.value.length = 0
     }
 
     // 重置框选状态
     const resetChecked = () => {
       isChecking.value = false
-      checkedList.value = []
+      checkedList.value.length = 0
     }
 
     // 移除框选的列表项

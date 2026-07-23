@@ -2,7 +2,6 @@ import { useMusicStore } from './music'
 import { notify } from '@/components/Notification'
 import { AutoStartMode, CloseStatus, DefaultSystemFonts, ShortcutKey } from '@/utils/params'
 import {
-  ShortcutEvent,
   isRegistered,
   register,
   unregister,
@@ -28,7 +27,7 @@ export const useSettingStore = defineStore(
     const isFullscreen = ref(false) // 全屏
 
     const autoLiteVipState = ref(false) // 自动领取概念版会员
-    const availableFonts = ref<[FontName, FontValue][]>([]) // 可用字体列表
+    const availableFonts = ref<FontItem[]>([]) // 可用字体列表
     const fontFamily = ref<FontValue>('system-ui') // 字体
     const autoStartState = ref(false) // 开机自启状态
     const autoStartMode = ref(AutoStartMode.Foreground) // 开机自启模式
@@ -38,6 +37,8 @@ export const useSettingStore = defineStore(
     const shortcutMap = ref({ ...Default_Shortcut }) // 快捷键映射
     const device = ref('') // 设备ID
     const version = ref('0.1.1') // 应用版本
+    const desktopMiniPosition = ref({ x: 0, y: 0 }) // mini播放器坐标
+    const desktopLyricPosition = ref({ x: 0, y: 0 }) //桌面歌词坐标
 
     const musicStore = useMusicStore()
 
@@ -66,7 +67,7 @@ export const useSettingStore = defineStore(
 
       context.font = `${fontSize}px ${baseFont}`
       const baseWidth = context.measureText(testString).width
-      const fonts: [FontName, FontValue][] = []
+      const fonts: FontItem[] = []
 
       DefaultSystemFonts.forEach(([name, value]) => {
         context.font = `${fontSize}px "${value}", ${baseFont}`
@@ -120,67 +121,63 @@ export const useSettingStore = defineStore(
 
       if (await isRegistered(shortcut)) return
 
-      let registerFn: (e: ShortcutEvent) => void = () => {}
-
-      switch (type) {
-        case 'playOrPause':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-
-            if (musicStore.isPlaying) {
-              musicStore.pause()
-            } else {
-              musicStore.play()
-            }
-          }
-          break
-        case 'addVolumn':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.setVolume(musicStore.volume + 5)
-          }
-          break
-        case 'subVolumn':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.setVolume(musicStore.volume - 5)
-          }
-          break
-        case 'mute':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-
-            musicStore.setVolume(musicStore.volume ? 0 : musicStore.lastVolumn)
-          }
-          break
-        case 'prev':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.playPrevOrNext('prev')
-          }
-          break
-        case 'next':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.playPrevOrNext('next')
-          }
-          break
-        case 'forward':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.seek(musicStore.playProgress + 5)
-          }
-          break
-        case 'backward':
-          registerFn = (e) => {
-            if (e.state === 'Released') return
-            musicStore.seek(musicStore.playProgress - 5)
-          }
-          break
-      }
-
       try {
-        await register(shortcut, registerFn)
+        switch (type) {
+          case 'playOrPause':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+
+              if (musicStore.isPlaying) {
+                musicStore.pause()
+              } else {
+                musicStore.play()
+              }
+            })
+            break
+          case 'addVolumn':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.setVolume(musicStore.volume + 5)
+            })
+            break
+          case 'subVolumn':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.setVolume(musicStore.volume - 5)
+            })
+            break
+          case 'mute':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+
+              musicStore.setVolume(musicStore.volume ? 0 : musicStore.lastVolumn)
+            })
+            break
+          case 'prev':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.playPrevOrNext('prev')
+            })
+            break
+          case 'next':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.playPrevOrNext('next')
+            })
+            break
+          case 'forward':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.seek(musicStore.playProgress + 5)
+            })
+            break
+          case 'backward':
+            await register(shortcut, (e) => {
+              if (e.state === 'Released') return
+              musicStore.seek(musicStore.playProgress - 5)
+            })
+            break
+        }
       } catch (e) {
         console.error(e)
 
@@ -248,6 +245,14 @@ export const useSettingStore = defineStore(
       unregister('MediaTrackPrevious')
     }
 
+    const setDesktopMiniPosition = (pos: { x: number; y: number }) => {
+      desktopMiniPosition.value = pos
+    }
+
+    const setdesktopLyricPosition = (pos: { x: number; y: number }) => {
+      desktopLyricPosition.value = pos
+    }
+
     return {
       isHydrated,
       isMaximized,
@@ -263,6 +268,8 @@ export const useSettingStore = defineStore(
       shortcutMap,
       device,
       version,
+      desktopMiniPosition,
+      desktopLyricPosition,
 
       toggleAutoLiteVipState,
       toggleMaximizedState,
@@ -280,7 +287,9 @@ export const useSettingStore = defineStore(
       registerGlobalShortcut,
       unregisterGlobalShortcut,
       registerAllGlobalShortcut,
-      unregisterAllGlobalShortcut
+      unregisterAllGlobalShortcut,
+      setDesktopMiniPosition,
+      setdesktopLyricPosition
     }
   },
   {
@@ -296,7 +305,9 @@ export const useSettingStore = defineStore(
         'mediaShortcutState',
         'shortcutMap',
         'device',
-        'version'
+        'version',
+        'desktopMiniPosition',
+        'desktopLyricPosition'
       ],
       afterHydrate: (ctx) => (ctx.store.isHydrated = true)
     }

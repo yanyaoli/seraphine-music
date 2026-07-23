@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ActionButton from '@/components/ActionButton.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { useMusicStore } from '@/stores/music'
 import { useSettingStore } from '@/stores/setting'
 import { LyricFormat, LyricTransMode } from '@/utils/params'
@@ -13,7 +13,7 @@ interface Emits {
 
 const emits = defineEmits<Emits>()
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 const musicStore = useMusicStore()
 const settingStore = useSettingStore()
 
@@ -68,7 +68,8 @@ const setLyricPadding = async () => {
 
 // 获取单词进度百分比
 const getWordProgress = (offset: number, duration: number) => {
-  return `${Math.max(0, Math.min(1, ((musicStore.playProgress + lyricStore.offset) * 1000 - offset) / duration)) * 100}%`
+  const pg = (musicStore.playProgress + lyricStore.offset) * 1000 - offset
+  return `${Math.max(0, Math.min(1, pg / duration)) * 100}%`
 }
 
 // 滚动到当前行

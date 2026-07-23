@@ -1,5 +1,5 @@
 import { useListStore } from './list'
-import { useLyricStore } from './lyric'
+import { useMainLyricStore } from './lyric'
 import { notify } from '@/components/Notification'
 import { Interval, PlayingMode, PlayingOrigin, PlayingQuality } from '@/utils/params'
 import { getFullName, getPlayingOrigin, getRandomNumber, invoke } from '@/utils/tools'
@@ -35,7 +35,7 @@ export const useMusicStore = defineStore(
     let downloadChannel: Channel<number> | null = null
 
     const listStore = useListStore()
-    const { load: loadLyric } = useLyricStore()
+    const { load: loadLyric } = useMainLyricStore()
 
     // 水合完成时恢复播放状态
     watch(

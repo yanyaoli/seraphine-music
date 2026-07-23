@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import SelectModal from '@/components/SelectModal.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric'
 import { LyricPageMode } from '@/utils/params'
 import { vOnClickOutside } from '@vueuse/components'
 
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 
 const pageModeOptions: SelectOption[] = [
   { label: '方形封面', value: LyricPageMode.Cover, prefixIcon: 'Picture' },

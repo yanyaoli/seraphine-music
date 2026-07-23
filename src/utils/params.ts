@@ -87,13 +87,13 @@ export const enum LyricFormat {
 /** 歌词字体大小范围 */
 export const enum LyricFontSize {
   Step = 2,
-  Default = 24,
+  Default = 26,
   Min = 16,
-  Max = 32
+  Max = 36
 }
 
-/** 歌词文本颜色 */
-export const enum LyricTextColor {
+/** 歌词底色 */
+export const enum LyricBaseColor {
   Red = '#ef4444',
   Orange = '#f97316',
   Yellow = '#eab308',
@@ -101,6 +101,17 @@ export const enum LyricTextColor {
   Cyan = '#06b6d4',
   Blue = '#3b82f6',
   Purple = '#a855f7'
+}
+
+/** 歌词着重色 */
+export const enum LyricAccentColor {
+  Red = '#fca5a5',
+  Orange = '#fdba74',
+  Yellow = '#fde047',
+  Green = '#86efac',
+  Cyan = '#67e8f9',
+  Blue = '#93c5fd',
+  Purple = '#d8b4fe'
 }
 
 /** 歌词对齐模式 */
@@ -195,12 +206,57 @@ export const enum MenuAction {
   Exit
 }
 
-/** 桌面歌词窗口通信类型 */
-export const enum LyricEmitType {
+export const enum WindowName {
+  Main = 'main',
+  DesktopMini = 'desktop-mini',
+  DesktopLyric = 'desktop-lyric'
+}
+
+export const enum WindowEvent {
+  DesktopMini = 'desktop-mini:handler',
+  DesktopLyric = 'desktop-lyric:handler'
+}
+
+/** 迷你播放器窗口通信类型 */
+export const enum DesktopMiniEmit {
+  /** 初始化数据 */
+  Init,
+  /** 发送坐标 */
+  Pos,
+  /** 获取音频 */
+  Audio,
   /** 获取歌词 */
-  GetLyric,
-  /** 发送歌词 */
-  SendLyric,
+  Lyric,
+  /** 获取播放列表 */
+  Playlist,
+  /** 播放 */
+  Play,
+  /** 暂停 */
+  Pause,
+  /** 上一首 */
+  Prev,
+  /** 下一首 */
+  Next,
+  /** 播放指定音频 */
+  Set,
+  /** 关闭窗口 */
+  Close
+}
+
+/** 桌面歌词窗口通信类型 */
+export const enum DesktopLyricEmit {
+  /** 初始化数据 */
+  Init,
+  /** 发送坐标 */
+  Pos,
+  /** 获取音频信息 */
+  Audio,
+  /** 获取歌词 */
+  Lyric,
+  /** 获取进度 */
+  Progress,
+  /** 获取可用字体 */
+  Fonts,
   /** 打开主界面 */
   Main,
   /** 上一曲 */
@@ -257,6 +313,16 @@ export const enum ShortcutKey {
   Forward = 'forward',
   Backward = 'backward'
 }
+
+export const PresetsColors = [
+  [LyricBaseColor.Red, LyricAccentColor.Red],
+  [LyricBaseColor.Orange, LyricAccentColor.Orange],
+  [LyricBaseColor.Yellow, LyricAccentColor.Yellow],
+  [LyricBaseColor.Green, LyricAccentColor.Green],
+  [LyricBaseColor.Cyan, LyricAccentColor.Cyan],
+  [LyricBaseColor.Blue, LyricAccentColor.Blue],
+  [LyricBaseColor.Purple, LyricAccentColor.Purple]
+] as const
 
 export const AreaTypes = [
   { type: 1, musician: 0, title: '华语' },
@@ -361,3 +427,8 @@ export const DefaultSystemFonts = [
   ['Source Code Pro', 'Source Code Pro'],
   ['Fira Code', 'Fira Code']
 ] as const
+
+// mini播放器默认尺寸(border:1px)
+export const desktopMiniSize = { width: 298, height: 66 } as const
+// 桌面歌词默认尺寸
+export const desktopLyricSize = { width: 608, height: 112 } as const

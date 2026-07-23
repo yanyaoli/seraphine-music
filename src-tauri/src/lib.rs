@@ -120,6 +120,17 @@ pub fn run() {
     .expect("error while running tauri application");
 }
 
+// 显示主窗口（迷你播放器打开时跳过）
+fn show_main_window(app: &AppHandle) {
+  if app.get_webview_window("desktop-mini").is_some() {
+    return;
+  }
+  if let Some(window) = app.get_webview_window("main") {
+    let _ = window.show();
+    let _ = window.set_focus();
+  }
+}
+
 // 创建托盘图标
 fn create_tray_icon(app_handle: &AppHandle) -> Result<TrayIcon> {
   let show = MenuItem::with_id(app_handle, "show", "显示窗口", true, None::<&str>)?;
@@ -132,15 +143,8 @@ fn create_tray_icon(app_handle: &AppHandle) -> Result<TrayIcon> {
     .menu(&menu)
     .show_menu_on_left_click(false)
     .on_menu_event(|app, event| match event.id.as_ref() {
-      "show" => {
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
-      }
-      "quit" => {
-        app.exit(0);
-      }
+      "show" => show_main_window(app),
+      "quit" => app.exit(0),
       _ => {}
     })
     .on_tray_icon_event(|tray, event| match event {
@@ -148,12 +152,7 @@ fn create_tray_icon(app_handle: &AppHandle) -> Result<TrayIcon> {
         button: MouseButton::Left,
         button_state: MouseButtonState::Up,
         ..
-      } => {
-        if let Some(window) = tray.app_handle().get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
-      }
+      } => show_main_window(tray.app_handle()),
       _ => {}
     });
 

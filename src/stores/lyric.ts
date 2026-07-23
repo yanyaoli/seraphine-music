@@ -1,10 +1,10 @@
 import {
+  LyricBaseColor,
   LyricFontSize,
   LyricFormat,
   LyricOffset,
   LyricPageMode,
   LyricTextAlign,
-  LyricTextColor,
   LyricTransMode
 } from '@/utils/params'
 import { getFullName, invoke, parseKrcLyric, parseLrcLyric } from '@/utils/tools'
@@ -12,8 +12,8 @@ import { getFullName, invoke, parseKrcLyric, parseLrcLyric } from '@/utils/tools
 type MatchedMap = Record<ID, { id: string; fmt: LyricFormat }>
 type OffsetMap = Record<ID, number>
 
-export const useLyricStore = defineStore(
-  'lyric',
+export const useMainLyricStore = defineStore(
+  'lyric-main',
   () => {
     const pageVisible = ref(false) // 歌词页可见性
     const pageMode = ref(LyricPageMode.Cover) // 歌词页背景模式
@@ -23,7 +23,7 @@ export const useLyricStore = defineStore(
     const setting = ref<LyricSetting>({
       fontFamily: 'system-ui',
       fontSize: LyricFontSize.Default,
-      textColor: LyricTextColor.Blue,
+      textColor: LyricBaseColor.Blue,
       textAlign: LyricTextAlign.Left,
       transMode: LyricTransMode.Off
     })
@@ -38,21 +38,17 @@ export const useLyricStore = defineStore(
     const setLyric = (newLyric: LyricInfo | undefined) => (lyric.value = newLyric)
     const setFontFamily = (newFontFamily: FontValue) => (setting.value.fontFamily = newFontFamily)
     const setFontSize = (mode: 'add' | 'sub' | 'restart') => {
-      let fontSize = setting.value.fontSize
-
       switch (mode) {
         case 'add':
-          fontSize += LyricFontSize.Step
+          setting.value.fontSize += LyricFontSize.Step
           break
         case 'sub':
-          fontSize -= LyricFontSize.Step
+          setting.value.fontSize -= LyricFontSize.Step
           break
         case 'restart':
-          fontSize = LyricFontSize.Default
+          setting.value.fontSize = LyricFontSize.Default
           break
       }
-
-      setting.value.fontSize = fontSize
     }
     const setTextColor = (newColor: string) => (setting.value.textColor = newColor)
     const setTextAlign = (newTextAlign: LyricTextAlign) => (setting.value.textAlign = newTextAlign)
@@ -62,38 +58,35 @@ export const useLyricStore = defineStore(
     const setOffsetMap = (mode: 'add' | 'sub' | 'restart') => {
       if (!lyric.value) return
 
-      let offset = offsetMap.value[lyric.value.id] || LyricOffset.Default
-
       switch (mode) {
         case 'add':
-          offset += LyricOffset.Step
+          offsetMap.value[lyric.value.id] += LyricOffset.Step
           break
         case 'sub':
-          offset -= LyricOffset.Step
+          offsetMap.value[lyric.value.id] -= LyricOffset.Step
           break
         case 'restart':
-          offset = LyricOffset.Default
+          offsetMap.value[lyric.value.id] = LyricOffset.Default
           break
       }
-
-      offsetMap.value[lyric.value.id] = offset
     }
 
     const load = async (music: PlayingMusic, lyric?: LyricCandidate) => {
       isLoading.value = true
+      setLyric(undefined)
 
       let lyricGet = await getLocalLyric(music, lyric)
       if (!lyricGet) lyricGet = await getOnlineLyric(music, lyric)
 
       if (lyricGet) {
-        let lyricLines: LyricLine[] = []
+        const lyricLines: LyricLine[] = []
 
         switch (lyricGet.fmt) {
           case LyricFormat.Krc:
-            lyricLines = parseKrcLyric(lyricGet.content)
+            lyricLines.push(...parseKrcLyric(lyricGet.content))
             break
           case LyricFormat.Lrc:
-            lyricLines = parseLrcLyric(lyricGet.content)
+            lyricLines.push(...parseLrcLyric(lyricGet.content))
             break
         }
 
@@ -174,7 +167,7 @@ export const useLyricStore = defineStore(
   },
   {
     persist: {
-      key: 'lyric-store',
+      key: 'lyric-main-store',
       pick: ['pageMode', 'setting', 'matchedMap', 'offsetMap']
     }
   }

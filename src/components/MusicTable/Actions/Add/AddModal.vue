@@ -72,7 +72,7 @@ const removePath = (index: number) => {
   scanPaths.value.splice(index, 1)
 
   // 重置扫描结果
-  scanList.value = []
+  scanList.value.length = 0
   scanStatus.value = ScanStatus.Ready
 }
 
@@ -121,8 +121,8 @@ const removeMusic = (index: number) => {
 }
 
 const handleReset = () => {
-  scanPaths.value = []
-  scanList.value = []
+  scanPaths.value.length = 0
+  scanList.value.length = 0
   scanStatus.value = ScanStatus.Ready
 }
 

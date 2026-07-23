@@ -7,7 +7,7 @@ import SvgIcon from '../SvgIcon.vue'
 import VirtualList from '../VirtualList.vue'
 import MusicDetail from './MusicDetail.vue'
 import { notify } from '@/components/Notification'
-import { useContextMenuStore } from '@/stores/contextMenu.ts'
+import { useContextmenuStore } from '@/stores/contextmenu.ts'
 import { useMusicStore } from '@/stores/music.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useListContext } from '@/utils/hooks.ts'
@@ -25,7 +25,7 @@ const route = useRoute()
 
 const musicStore = useMusicStore()
 const userStore = useUserStore()
-const contextMenuStore = useContextMenuStore()
+const contextMenuStore = useContextmenuStore()
 
 const { listStore, listType, list } = useListContext()
 

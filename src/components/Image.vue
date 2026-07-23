@@ -35,6 +35,7 @@ watch(() => img, handlePreload, { immediate: true })
     :src="img"
     loading="lazy"
     decoding="async"
-    alt="" />
+    alt=""
+    :draggable="false" />
   <SvgIcon v-else :class="cn('card ', attrs.class)" :name="icon" :size="iconSize" />
 </template>

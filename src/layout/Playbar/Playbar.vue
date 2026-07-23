@@ -8,7 +8,7 @@ import Carousel from '@/components/Carousel.vue'
 import Image from '@/components/Image.vue'
 import ProgressRange from '@/components/ProgressRange.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
-import { useLyricStore } from '@/stores/lyric'
+import { useMainLyricStore } from '@/stores/lyric.ts'
 import { useMusicStore } from '@/stores/music'
 import { Interval, PlayingOrigin } from '@/utils/params'
 import { formatDuration, getPic } from '@/utils/tools'
@@ -16,7 +16,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { watchThrottled } from '@vueuse/core'
 
 const musicStore = useMusicStore()
-const lyricStore = useLyricStore()
+const lyricStore = useMainLyricStore()
 
 const playProgress = ref(musicStore.playProgress)
 
